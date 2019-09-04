@@ -16,12 +16,24 @@ classify_for <- function(beta, xtrain, ytrain, xtest, ytest){
   # [ToDo] Code discriminant analysis classifier using for loop
   
   # Calculate sample means based on training data
- 
+  xbar1 = colMeans(xtrain[ytrain == 1, ]) #sample means for class 1
+  xbar2 = colMeans(xtrain[ytrain == 2, ]) #sample means for class 2
   
   # Calculate class assignments for xtest in a for loop
+  n = nrow(xtest)
+  ypred = rep(1, n)
   
+  for(i in 1:n){
+    #apply h(x) rule to the ith row of xtest
+    h1 = as.numeric(crossprod(beta, xtest[i, ] - xbar1)^2)
+    h2 = as.numeric(crossprod(beta, xtest[i, ] - xbar2)^2)
+    if(h1 > h2){
+      ypred[i] = 2
+    }
+  }
   # Calculate % error using ytest
-
+  error = (sum(ytest != ypred) / n) * 100
+  
   # Return predictions and error
   return(list(ypred = ypred, error = error))
 }
@@ -30,11 +42,20 @@ classify_vec <- function(beta, xtrain, ytrain, xtest, ytest){
   # [ToDo] Try to create vectorized version of classify_for
   
   # Calculate sample means based on training data
+  xbar1 = colMeans(xtrain[ytrain == 1, ]) #sample means for class 1
+  xbar2 = colMeans(xtrain[ytrain == 2, ]) #sample means for class 2
   
   # Calculate class assignments for xtest using matrix and vector algebra
+  xtestb = xtest %*% beta
+  m1b = as.numeric(crossprod(xbar1, beta))
+  m2b = as.numeric(crossprod(xbar2, beta))
+  hdiff = 2 * xtestb * (m2b - m1b) + m1b^2 - m2b^2
+
   
   # Calculate % error using ytest
- 
+  n = nrow(xtest)
+  error = (sum(ytest != ypred) / n) * 100
+  
   # Return predictions and error
   return(list(ypred = ypred, error = error))
 }
@@ -80,7 +101,10 @@ out1 = classify_for(beta, xtrain, ytrain, xtest, ytest)
 out2 = classify_vec(beta, xtrain, ytrain, xtest, ytest)
 
 # [ToDo] Verify the assignments agree with each other
+sum(out1$ypred != out2$ypred)
 
 # [ToDo] Use microbenchmark package to compare the timing
 
 library(microbenchmark)
+microbenchmark(classify_for(beta, xtrain, ytrain, xtest, ytest),
+               classify_vec(beta, xtrain, ytrain, xtest, ytest))
